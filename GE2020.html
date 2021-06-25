@@ -1,0 +1,1061 @@
+<!DOCTYPE html>  
+<html>  
+    <head>
+		<style>
+				
+				
+			#facebook-text.a {
+				list-style-type: circle;
+			}
+			
+			.pie{
+				position: relative;
+				bottom:30px;
+				right:30px;
+			}
+			.arc text {
+				font: 10px sans-serif;
+				text-anchor: middle;
+           
+			}
+
+			.arc path {
+				stroke: #fff;
+			}
+
+			body { margin:0;top:0;right:0;bottom:0;left:0; }
+				.xGroup line, .xGroup path{
+					visibility: hidden;
+				}
+			  .tooltip{
+				  position      : absolute;
+				  text-align    : center;
+				  max-width     : 70px;
+				  max-height    : 30px;
+				  padding       : 8px;
+				  border        : none;
+				  border-radius : 8px;
+				  margin-top    : -30px;
+				  font          : 10px sans-serif;
+				  background    : black;
+				  color         : white;
+				  pointer-events: none;
+			  }
+			  
+			/* to display the tabs horizonatlly use inline else tabs will be displayed vertically */
+			li { display: inline; } 
+
+			li.tab-item, li.smc-item, li.grc-item{
+				font-family: Merriweather;
+				font-size: 1.2em;
+				color:rgb(220,20,60);   
+				border-right: 1px solid #ccc;
+				padding: 0 1.2rem;
+			}
+			
+			a:link {
+			color:red;
+			}
+			
+			/* geo json css starts here */
+			.viz{
+			  background-color:white ;
+			}
+
+			#tooltip {
+			  font-size: 13px;
+			  position: absolute;
+			  width: auto;
+			  height: auto;
+			  padding: 2.5px;
+			  border:1px solid black;
+			  background: green;
+			  background: grey;
+			  -webkit-border-radius: 3px;
+			  -moz-border-radius: 3px;
+			  border-radius: 3px;
+			  pointer-events: none;
+			  color: black;
+			}
+
+			#tooltip.hidden {
+			  display: none;
+			}
+
+			path.area{
+			  stroke-width:0.3;
+			  fill: RGB(204,0,0);
+			  stroke: white;
+			}
+			path.area.highlight{
+			  fill:RGB(132,0,0);
+			}
+			table, th, td {
+                        border: 1px solid black;
+                        border-collapse: collapse;
+            }
+			
+			/* geo json css ends here */
+			
+			/* bar graph css */
+			.bar {
+			font-size:40px;
+            fill: black;
+        }
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+.grc-result-table{
+   margin-left: auto;
+  margin-right: auto;
+  width:auto;
+}
+
+.grc-table-header {
+  border: 1px solid #dddddd;
+}
+tr.grc-table-row{
+background-color: white;
+  
+	.bar:hover {
+	  fill: none ;
+	}
+}
+
+.smc-result-table{
+   margin-left: auto;
+  margin-right: auto;
+  width:auto;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+.smc-table-header {
+  border: 1px solid #dddddd;
+}
+tr.smc-table-row{
+background-color: white;
+  
+	.bar:hover {
+	  fill: none ;
+	}
+}
+tr:nth-child(even) {
+  background-color: #dddddd;
+  
+	.bar:hover {
+	  fill: orange ;
+	}
+
+.x.axis path {
+  display: none;
+}
+
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+
+
+.smc-item a:link {
+    color: red; 
+}
+
+.smc-item a:visited {  color: green;}
+
+.smc-item a:hover, a:active {  color: blue;}
+.grc-item a:link {
+    color: red; 
+}
+
+.grc-item a:visited {  color: green;}
+
+.grc-item a:hover, a:active {  color: blue;}
+
+		</style>
+		<script src="https://d3js.org/d3.v4.min.js"></script>
+		<script src="//d3js.org/topojson.v1.min.js"></script>
+		<script src="https://d3js.org/d3-geo.v1.min.js"></script>
+		<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+		<script type = "text/javascript" src="smc.js"> </script>
+		<script type = "text/javascript" src="grc.js"> </script>
+		
+		<script>
+			function Click_All(){  
+			  document.getElementById("result-All").style.display = "block";
+			  document.getElementById("result-SMC").style.display = "none";
+			  document.getElementById("result-GRC").style.display = "none";
+			  document.getElementById("result-Party").style.display = "none";
+			  
+			}
+
+			function Click_SMC(){  
+			  document.getElementById("result-All").style.display = "none";
+			  document.getElementById("result-SMC").style.display = "block";
+			  document.getElementById("result-GRC").style.display = "none";
+			  document.getElementById("result-Party").style.display = "none";
+			  Click_BukitBatok();
+			  
+			}
+
+			function Click_GRC(){  
+			  document.getElementById("result-All").style.display = "none";
+			  document.getElementById("result-SMC").style.display = "none";
+			  document.getElementById("result-GRC").style.display = "block";
+			  document.getElementById("result-Party").style.display = "none";
+			  Click_Aljunied();
+			}
+
+			function Click_Party(){  
+			  document.getElementById("result-All").style.display = "none";
+			  document.getElementById("result-SMC").style.display = "none";
+			  document.getElementById("result-GRC").style.display = "none";
+			  document.getElementById("result-Party").style.display = "block";
+			  
+			}
+
+			
+		</script>
+    </head>  
+     <body> 
+		<div style="width:auto;height:auto">
+			<div style="background-color:rgb(204,0,0);color:rgb(255,255,255);width:100%;display:inline-block;height:50px"> 
+				<div style="display:inline;float:center;text-align:center;font-size:12px"><h1>Singapore GE2020 </h1></div>	
+			</div>  
+		
+			<div> 
+				<div style="background-color:DarkGray;width:100%;display:inline-block;height:55px"> 
+				<div style="display:inline;float:left;vertical-align:middle;margin-left: 50px"><img src="vote.png" width="50" height="50"></div>
+				<div style="display:inline-block;float:left;vertical-align: middle;color:rgb(255,255,255);"><h2> 2,653,942 Electors</h2> </div>   
+                
+				<div style="display:inline;float:left;vertical-align:middle; margin-left: 270px"><img src="mps.png" width="50" height="50"></div>
+				<div style="display:inline-block;float:left;vertical-align: middle;color:rgb(255,255,255);"><h2> 93 MPs</h2> </div>   
+
+                <div style="display:inline;float:left;vertical-align:middle; margin-left: 300px"><img src="sgmap.png" width="50" height="50"></div>
+				<div style="display:inline-block;float:left;vertical-align: middle;color:rgb(255,255,255);"><h2>14 SMCs   | 17 GRCs </h2> </div>   
+
+				
+			</div>
+			<div style="font-family:system-ui;background-color:rgba(255,255,255, .8);color:#DC143C;position:relative;text-align:center;">
+				<ul class ="HtmlTabs" id="tabs" >
+				  <li class="tab-item">
+					<a  href="javascript:void(0);" onclick="Click_All();return false;">Overview</a>
+					</li>
+				  <li class="tab-item">
+					<a href="javascript:void(0);" onclick="Click_SMC();return false;">SMCs</a>
+					</li>
+				  <li class="tab-item">
+					<a href="javascript:void(0);" onclick="Click_GRC();return false;">GRCs</a>
+					</li>
+				  <li class="tab-item">
+					<a href="javascript:void(0);" onclick="Click_Party();return false;">Parties</a>
+				  </li>
+				  
+				
+				</ul>
+
+
+				 <div class = "tab-All" id ="result-All" style="display:block">
+					<div id="Map">  
+							<!-- <svg width="100" height="50" ></svg> -->
+						<div style="float:left;display:inline-block;">
+							<div style="padding-left:20px">
+								<Strong style="font-size:20px;">Winner</Strong>
+							</div>
+							<div style="margin-left:11px;vertical-align: middle;font-size:10px">
+							
+								<img src="papoverview.png" alt="PAP image" width="120" height="120"><h2 style="color:rgb(204,0,0)">Peoples Action Party <br>83 Seats</br> </h2>
+								
+							</div>
+							<div style="margin-left:24px;vertical-align: middle;font-size:10px">
+							
+								<img src="wpoverview.png" alt="WP image" width="100" height="100"><h2 style="color:rgb(0,96,191)">Workers Party<br>10 Seats</br> </h2>
+						
+							</div>
+						</div>
+						<div id="tooltip" class="hidden">
+						
+							<p><span id="value"></p>
+						</div>
+						<div>
+							<script>
+									var margin = {top: 5, right: 5, bottom: 10, left: 10},
+											padding = {top: 5, right: 5, bottom: 10, left: 10},
+											vizWidth = 800,
+											vizHeight = 450,
+											plotWidth = vizWidth - margin.left - margin.right,
+											plotHeight = vizHeight - margin.top - margin.bottom,
+											panelWidth = plotWidth - padding.left - padding.right,
+											panelHeight = plotHeight - padding.top - padding.bottom;
+				
+									var viz = d3.select("#Map").append("svg")
+															.classed("viz",true)
+														.attr("width", vizWidth)
+														.attr("height", vizHeight);
+				
+									var plot = viz.append("g")
+											.attr("class","plot")
+										.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+				
+									var panel = plot.append("g")
+											.attr("class","panel")
+										.attr("transform", "translate(" + padding.left + "," + padding.top + ")");
+				
+									var div = d3.select("body").append("div")
+										.attr("class", "tooltip")
+										.style("display", "none");
+				
+									//Important Functions
+									function drawTooltip(d) {
+											console.log(d);
+											var xPosition = d3.event.pageX;
+										var yPosition = d3.event.pageY;
+				
+											d3.select("#tooltip")
+												.classed("hidden",false)
+												.style("left", xPosition + "px")
+												.style("top", yPosition + "px")
+												.html("<h5 style= text-align:center;>" + d.properties.PLN_AREA_N + "</h5>" +
+                                                      "Number of Electors:  " + d.properties.Noofelectors + " <br/> " +
+													  "Total Votes Cast:  " + d.properties.totalvotescast + " <br/> " +
+													  "Total Valid Votes:  " + d.properties.totalvalidvotes + " <br/> " +
+													  "Spoilt Votes:  " + d.properties.spoiltvotes + " <br/> " +
+													  "<table style= width:100%;><tr><th>Party</th><th>Total Votes</th><th>Valid Votes</th></tr><tr><td>" + d.properties.partywin + "</td><td>" + d.properties.wintotal + "</td><td>" + d.properties.winvalid + "</td></tr><tr><td>" + d.properties.partylose + "</td><td>" + d.properties.losetotal + "</td><td>" + d.properties.losevalid + "</td></tr></table>");
+                                                      
+									}
+				
+									function mouseout() {
+										d3.select("#tooltip").classed("hidden", true);
+										d3.select(this).classed("highlight",false)
+									}
+				
+				
+									d3.json("finalmap.json", function(sg) {
+											var projection = d3.geoMercator().fitSize([panelWidth,panelHeight],sg),
+													geoPath = d3.geoPath(projection);
+				
+											var areas = panel.selectAll("path")
+																			.data(sg.features)
+																			.enter()
+																			.append("path")
+																					.attr("d",geoPath)
+																					.classed("area",true)
+																					.on('mouseover', function(d) {
+																						d3.select(this).classed("highlight",true);
+																						drawTooltip(d);})
+																					.on('mouseout',mouseout);
+									});
+							</script>	
+						</div> 
+					</div>
+						<div  style="float:left; height:auto; width:200px;margin-left:5px;margin-right:5px;">
+							<h2> 
+								<ul  id ="#facebook-text" style="color:black;font-size:14px;text-align:left">
+									<li> PM Lee posted 29 times on Facebook and garnered
+									390,342 total interactions -Between June 22 and July 1.</li>
+									<p></p>
+									<p></p>
+									<li>Of the four main parties, WP
+									posted the least number of times on Facebook (47) but garnered the highest number of interactions.</li>
+								</ul>				
+							</h2>				
+						</div>
+
+						<div id="facebook_bar_chart" style="float:left;margin-right:15px; width:auto; height:auto">
+							<script>
+								// set the dimensions and margins of the graph
+								var margin = {top: 20, right: 30, bottom: 40, left: 90},
+								width = 400 - margin.left - margin.right,
+								height = 400 - margin.top - margin.bottom;
+						
+								// append the svg object to the body of the page
+								var svg_bar = d3.select("#facebook_bar_chart")
+								.append("svg")
+								.attr("width", width + margin.left + margin.right)
+								.attr("height", height + margin.top + margin.bottom)
+								.append("g")
+								.attr("transform","translate(" + margin.left + "," + margin.top + ")");
+								  
+							    //tool tip//
+								/*var div = d3.select("body").append("div")
+										.attr("tooltip")
+										.style("display", "none");
+				
+									//Important Functions
+									function drawTooltip(data) {
+											console.log(data);
+											var xPosition = d3.event.pageX;
+										var yPosition = d3.event.pageY;
+				
+											d3.select("#tooltip")
+												.classed("hidden",false)
+												.style("left", xPosition + "px")
+												.style("top", yPosition + "px")
+												.html( + data.Value );
+                                                      
+									}
+				
+									function mouseout() {
+										d3.select("#tooltip").classed("hidden", true);
+										d3.select(this).classed("highlight",false)
+									}*/
+								// Parse the Data
+								d3.csv("facebook.csv", function(data) {
+
+								// Add X axis
+								var x = d3.scaleLinear()
+								.domain([0, 80])
+								.range([ 0, width]);
+							
+								svg_bar.append("g")
+								.attr("transform", "translate(0," + height + ")")
+								.call(d3.axisBottom(x))
+								.selectAll("text")
+								.attr("transform", "translate(-12,0)rotate(-45)")
+								.style("text-anchor", "end");
+
+								// Y axis
+								var y = d3.scaleBand()
+								.range([ 0, height ])
+								.domain(data.map(function(d) { return d.Country; }))
+								.padding(.2);
+								svg_bar.append("g")
+								.call(d3.axisLeft(y))
+							
+								svg_bar.append("text")
+								.attr("transform", "translate(30,0)")
+								.attr("x", 0)
+								.attr("y", 0)
+								.attr("font-size", "12px")
+								.attr("font-weight", "bold")
+								.text("No. of wall Posts on Facebook from July 1 to 6")
+						 
+								//Bars
+								svg_bar.selectAll(".bar")
+								.data(data) 
+								.enter()
+								.append("rect")
+								.attr("x", x(0.5))
+								.attr("y", function(d) { return y(d.Country); })
+								.attr("width", function(d) { return x(d.Value); })
+								.attr("height", y.bandwidth() )
+								.attr("fill", "grey")	
+								/*.on('mouseover', function(data) {
+																d3.select(this).classed("highlight",true);
+																	drawTooltip(data);})
+																	.on('mouseout',mouseout);	*/	
+								
+							});
+							</script>
+						</div>
+						<div  class=".pie" id="Gender_Pie_chart" style="float:right;margin-right:30px; width:auto; height:auto">
+							<script>
+								var width = 200,
+								height = 240;
+							
+								var svg = d3.select("#Gender_Pie_chart").append("svg")
+								.attr("width", width)
+								.attr("height", height);
+            
+								radius = Math.min(width, height) / 2;
+        
+								var g = svg.append("g")
+								.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+								var color = d3.scaleOrdinal(['grey','red']);
+
+								var pie = d3.pie().value(function(d) { 
+								return d.percent; 
+								});
+
+								var path = d3.arc()
+								.outerRadius(radius -10)
+								.innerRadius(0);
+
+								var label = d3.arc()
+								.outerRadius(radius)
+								.innerRadius(radius - 80);
+
+								d3.csv("PieChartData.csv", function(error, data) {
+								if (error) {
+									throw error;
+								}
+								var arc = g.selectAll(".arc")
+								.data(pie(data))
+								.enter().append("g")
+								.attr("class", "arc");
+			
+
+								arc.append("path")
+								.attr("d", path)
+								.attr("fill", function(d) { return color(d.data.browser); });
+        
+        
+								arc.append("text")
+								.attr("font-size", "20px")
+								.attr("font-weight", "bold")
+								.attr("transform", function(d) { 
+								return "translate(" + label.centroid(d) + ")"; 
+								})
+								.text(function(d) { return d.data.browser; });
+								});
+
+								svg.append("g")
+								.attr("transform", "translate(" + (width / 2 - 20) + "," + 10 + ")")
+								.append("text")			   
+								.text("Gender Ratio")
+								.attr("font-size", "14px")
+								.attr("font-weight", "bold")
+								.attr("color", "black")
+							</script>
+							<h2 style="font-size:14px;font-weight:bold;color:black">74 New Candidates</h2>
+							<h2 style="font-size:14px;font-weight:bold;color:black">118 Old Candidates</h2>
+						</div>
+						<select id="selectButton" style="float:left;margin-left:30px;"></select>		
+						<div class =".pie" id="linechart" style="float:left;margin-right:30px; width:auto; hieght:auto">
+						<!-- Color Scale -->
+							<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+
+							<script>
+								// set the dimensions and margins of the graph
+								var margin = {top: 10, right: 30, bottom: 30, left: 60},
+								width = 460 - margin.left - margin.right,
+								height = 350 - margin.top - margin.bottom;
+
+								// append the svg object to the body of the page
+								var svg_line = d3.select("#linechart")
+								  .append("svg")
+									.attr("width", width + margin.left + margin.right)
+									.attr("height", height + margin.top + margin.bottom)
+								  .append("g")
+									.attr("transform",
+										  "translate(" + margin.left + "," + margin.top + ")");
+
+								//Read the data
+								d3.csv("LineAnimation.csv", function(data) {
+
+								// List of groups (one group per column)
+								var allGroup = d3.map(data, function(d){return(d.name)}).keys()
+								console.log(allGroup)
+
+								// add the options to the button
+								d3.select("#selectButton")
+								  .selectAll('myOptions')
+									.data(allGroup)
+								  .enter()
+									.append('option')
+								  .text(function (d) { return d; }) // text showed in the menu
+								  // corresponding value returned by the button
+								  .attr("value", function (d) { return d; }) 
+
+								// A color scale: one color for each group
+								var myColor = d3.scaleOrdinal()
+								  .domain(allGroup)
+								  .range(d3.schemeSet2);
+
+								var yearData = d3.map(data, function(d){return(d.day)})
+								console.log(yearData);
+								
+								// Add X axis --> it is a date format
+								var x = d3.scaleLinear()
+								  .domain(d3.extent(data, function(d) { return d.day; }))
+								  .range([ 0, width ]);
+					  
+								svg_line.append("g")
+								  .attr("transform", "translate(0," + height + ")")
+								  .call(d3.axisBottom(x).ticks(7).tickFormat(d3.format("d")));
+
+								// Add Y axis
+								var y = d3.scaleLinear()
+								  .domain([0, d3.max(data, function(d) { return +d.n; })])
+								  .range([ height, 0 ]);
+								  
+								svg_line.append("g")
+								  .call(d3.axisLeft(y));
+					  
+								svg_line.append("text")
+										   .attr("transform", "translate(30,0)")
+										   .attr("x", 0)
+										   .attr("y", 0)
+										   .attr("font-size", "14px")
+										   .attr("font-weight", "bold")
+										   .attr("width", "auto")
+										   .text("Number of Facebook followers gained from July 1 to 6")
+								// Initialize line with first group of the list
+								var line = svg_line
+								  .append('g')
+								  .append('path')
+									.datum(data.filter(function(d){return d.name==allGroup[0]}))
+									.attr("d", d3.line()
+								  .x(function(d) { return x(d.day) })
+								  .y(function(d) { return y(+d.n) })
+								)
+								.attr("stroke", function(d){ return myColor(d) })
+								.style("stroke-width", 4)
+								.style("fill", "none")
+
+								// A function that update the chart
+									function update(selectedGroup) {
+
+								  // Create new data with the selection?
+								  var dataFilter = data.filter(function(d){return d.name==selectedGroup})
+
+								  // Give these new data to update line
+									line
+									  .datum(dataFilter)
+									  .transition()
+									  .duration(1000)
+									  .attr("d", d3.line()
+										.x(function(d) { return x(d.day) })
+										.y(function(d) { return y(+d.n) })
+									  )
+									  .attr("stroke", function(d){ return myColor(selectedGroup) })
+									}
+
+									// When the button is changed, run the updateChart function
+									d3.select("#selectButton").on("change", function(d) {
+										// recover the option that has been chosen
+										var selectedOption = d3.select(this).property("value")
+										// run the updateChart function with this selected option
+										update(selectedOption)
+									})
+
+								})
+
+
+							</script>
+						</div>
+					</div>
+
+			  
+			  <div class = "tab-SMC" id ="result-SMC" style="display:none">
+				<ul id="smc_tabs">
+				<li class="smc-item">
+					<a  href="javascript:void(0);" onclick="Click_BukitBatok();">Bukit Batok SMC</a>
+				</li>		
+				<li class="smc-item">
+					<a  href="javascript:void(0);" onclick="Click_Bukitpanjang();">Bukit Panjang SMC</a>
+				</li>  
+				<li class="smc-item">
+					<a  href="javascript:void(0);" onclick="Click_Hougang();">Hougang SMC</a>
+				</li>
+     
+				<li class="smc-item">
+					<a  href="javascript:void(0);" onclick="Click_HongKah();">Hong Kah North SMC</a>
+				</li>
+
+				<li class="smc-item">
+					<a  href="javascript:void(0);" onclick="Click_KebunBaru();">Kebun Baru SMC</a>
+				</li>
+
+      <li class="smc-item">
+    	<a  href="javascript:void(0);" onclick="Click_MountBatten();">Mountbatten SMC</a>
+       </li>
+
+      <li class="smc-item">
+    	<a  href="javascript:void(0);" onclick="Click_MacPherson();">MacPherson SMC</a>
+       </li>
+
+      <li class="smc-item">
+    	<a  href="javascript:void(0);" onclick="Click_Marymount();">Marymount SMC</a>
+       </li>
+
+      <li class="smc-item">
+    	<a  href="javascript:void(0);" onclick="Click_Pioneer();">Pioneer SMC</a>
+       </li>
+
+      <li class="smc-item">
+    	<a  href="javascript:void(0);" onclick="Click_PotongPasir();">Potong Pasir SMC</a>
+       </li>
+
+      <li class="smc-item">
+    	<a  href="javascript:void(0);" onclick="Click_PunggolWest();">Punggol West SMC</a>
+       </li>
+
+      <li class="smc-item">
+    	<a  href="javascript:void(0);" onclick="Click_RadinMas();">Radin MasSMC</a>
+       </li>
+
+      <li class="smc-item">
+    	<a  href="javascript:void(0);" onclick="Click_YioChuKang();">Yio Chu kang SMC</a>
+       </li>
+
+      <li class="smc-item">
+    	<a  href="javascript:void(0);" onclick="Click_Yuhua();">Yuhua SMC</a>
+       </li>
+     </ul>
+
+     <p/>
+     <p/>
+
+    <div id="smc-result" style="text-align: center; font-family:Helvetica;font-size:30px;"></div>
+     <p/>
+
+    <table class="smc-result-table" style="margin-left: auto; margin-right: auto;">    
+    <tr class="smc-table-row" >
+      <th class="header">No of Electors</th>
+      <th class="header">Total votes cast</th>
+      <th class="header">Total valid votes</th>
+      <th class="header">Spoilt Votes</th>
+      
+    </tr>
+    <tr class="smc-table-row">
+      <td id="electors"/>
+      <td id="votes-cast"/>
+      <td id="valid-votes"/>
+      <td id="spoilt-votes"/>
+    </tr>
+   </table>
+
+    <p/>
+
+   <table class="smc-result-table" style="margin-left: auto;
+  margin-right: auto;">
+    <tr class="smc-table-row">
+      <th><img  id="winning-party-icon" width="30" height="30"/></th>
+      <th class="smc-table-header" id="winning-party"></th>
+      <th class="smc-table-header" id="win-party-votes"></th>
+      
+    </tr>
+    <tr class="smc-table-row">
+      <th><img id="runner-party-icon" width="30" height="30"/></th>
+      <th class="smc-table-header" id="runner-party"></th>
+      <th class="smc-table-header" id="run-party-votes"></th>
+    </tr>
+  </table>
+			  </div>
+  
+
+			  			  
+			  <div class = "tab-GRC" id ="result-GRC" style="display:none;">
+			  <ul id="grc_tabs">
+		<li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_Aljunied();">Aljunied GRC</a>
+       </li>
+		
+		
+		<li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_AngMoKio();">Ang Mo Kio GRC</a>
+       </li>
+     
+    
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_BishanToaPayoh();">Bishan-Toa Payoh GRC</a>
+       </li>
+     
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_ChuaChuKang();">Chua Chu Kang GRC</a>
+       </li>
+
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_EastCoast();">East Coast GRC</a>
+       </li>
+
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_HollandBukitTimah();">Holland-Bukit Timah GRC</a>
+       </li>
+
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_JalanBesar();">Jalan Besar GRC</a>
+       </li>
+
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_Jurong();">Jurong GRC</a>
+       </li>
+
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_MarineParade();">Marine Parade GRC</a>
+       </li>
+
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_MarsilingYewTee();">Marsiling-Yew Tee GRC</a>
+       </li>
+
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_NeeSoon();">Nee Soon GRC</a>
+       </li>
+
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_PasirRisPunggol();">Pasir Ris-Punggol GRC</a>
+       </li>
+
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_Sembawang();">Sembawang GRC</a>
+       </li>
+
+      <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_Senkang();">Senkang GRC</a>
+       </li>
+	   
+	   <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_Tampines();">Tampines GRC</a>
+       </li>
+	   
+	    <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_TanjongPagar();">Tanjong Pagar GRC</a>
+       </li>
+	   
+	    <li class="grc-item">
+    	<a  href="javascript:void(0);" onclick="Click_WestCoast();">West Coast GRC</a>
+       </li>
+     </ul>
+
+    
+
+    <div id="grc-result" style="text-align: center; font-family:Helvetica;font-size:30px;"></div>
+     
+    <table class="grc-result-table" style="margin-left: auto; margin-right: auto;">    
+		
+		<tr class="grc-table-row" >
+      <th class="header">No of Electors</th>
+      <th class="header">Total votes cast</th>
+      <th class="header">Total valid votes</th>
+      <th class="header">Spoilt Votes</th>
+      
+		</tr>
+		<tr class="grc-table-row">
+			<td id="electorNUM"/>
+			<td id="votes-castNUM"/>
+			<td id="valid-votesNUM"/>
+			<td id="spoilt-votesNUM"/>
+		</tr>
+   </table>
+
+
+   <table class="grc-result-table" style="margin-left: auto; margin-right: auto;">
+    <tr class="grc-table-row">
+      <th><img  id="winning-partyGRC-iconGRC" width="30" height="30"/></th>
+      <th class="grc-table-header" id="winning-partyGRC"></th>
+      <th class="grc-table-header" id="win-party-votesGRC"></th>
+      
+    </tr>
+    <tr class="grc-table-row">
+      <th><img id="runner-partyGRC-iconGRC" width="30" height="30"/></th>
+      <th class="grc-table-header" id="runner-partyGRC"></th>
+      <th class="grc-table-header" id="run-party-votesGRC"></th>
+    </tr>
+  </table>
+			  
+			  </div>
+			  
+			  
+			  
+			  
+
+			  <div class = "tab-ByParty" id ="result-Party" style="display:none;">
+			  <div>
+				<div style="background-color:pink;float:left;">		
+					<h2> </h2>
+					<table>
+					  <tr>
+					  <th> </th>
+						<th>Party</th>
+						<th>Candidates fielded</th>
+						<th>Total seats won</th>
+					  </tr>
+					  <tr>
+						<td><img src="PAP.png" width="30" height="30"alt="party"></td>
+						<td>PAP</td>
+						<td style="text-align:center">93</td>
+						<td style="text-align:center">83</td>
+					  </tr>
+					  <tr>
+					  <td><img src="PSP.jpg" width="30" height="30"alt="party"></td>
+						<td>PSP</td>
+						<td style="text-align:center">24</td>
+						<td style="text-align:center">0</td>
+					  </tr>
+					  <tr>
+					  <td><img src="WP.png" width="30" height="30"alt="party"></td>
+						<td>WP</td>
+						<td style="text-align:center">21</td>
+						<td style="text-align:center">10</td>
+					  </tr>
+					  <tr>
+					  <td><img src="SDP.png" width="30" height="30"alt="party"></td>
+						<td>SDP</td>
+						<td style="text-align:center">11</td>
+						<td style="text-align:center">0</td>
+					  </tr>
+					  <tr>
+					  <td><img src="NSP.png" width="30" height="30"alt="party"></td>
+						<td>NSP</td>
+						<td style="text-align:center">10</td>
+						<td style="text-align:center">0</td>
+					  </tr>
+					  <tr>
+					   <td><img src="PV.png" width="30" height="30"alt="party"></td>
+						<td>PV</td>
+						<td style="text-align:center">10</td>
+						<td style="text-align:center">0</td>
+					  </tr>
+					  <tr>
+					  <tr>
+					   <td><img src="RP.png" width="30" height="30"alt="party"></td>
+						<td>RP</td>
+						<td style="text-align:center">6</td>
+						<td style="text-align:center">0</td>
+					  </tr>
+					  <tr>
+					   <td><img src="RDU.jpg" width="30" height="30"alt="party"></td>
+						<td>RDU</td>
+						<td style="text-align:center">5</td>
+						<td style="text-align:center">0</td>
+					  </tr>
+					   <tr>
+						<td><img src="SDA.png" width="30" height="30"alt="party"></td>
+						<td>SDA</td>
+						<td style="text-align:center">5</td>
+						<td style="text-align:center">0</td>
+					  </tr>
+					  <tr>
+					   <td><img src="SPP.png" width="30" height="30"alt="party"></td>
+						<td>SPP</td>
+						<td style="text-align:center">5</td>
+						<td style="text-align:center">0</td>
+					  </tr>
+					   <tr>
+						<td><img src="indp1.png" width="30" height="30"alt="party"></td>
+						<td>INDP</td>
+						<td style="text-align:center">1</td>
+						<td style="text-align:center">0</td>
+					  </tr>
+					</table>
+					
+				</div>
+				<div id="party_bar_chart" style="float:left;">
+					<script>
+						// set the dimensions and margins of the graph
+						var margin = {top: 20, right: 30, bottom: 40, left: 90},
+							width = 450 - margin.left - margin.right,
+							height = 660 - margin.top - margin.bottom;
+
+						// append the svg object to the body of the page
+						var svg = d3.select("#party_bar_chart")
+						  .append("svg")
+							.attr("width", width + margin.left + margin.right)
+							.attr("height", height + margin.top + margin.bottom)
+						  .append("g")
+							.attr("transform",
+								  "translate(" + margin.left + "," + margin.top + ")");
+								  
+						svg.append("text")
+						   .attr("transform", "translate(30,0)")
+						   .attr("x", 0)
+						   .attr("y", 0)
+						   .attr("font-size", "20px")
+						   .text("Percentage of Valid Votes")
+								  
+							//tool tip//
+							/*var div = d3.select("body").append("div")
+										.attr("class", "tooltip")
+										.style("display", "none");
+				
+									//Important Functions
+									function drawTooltip(d) {
+											console.log(d);
+											var xPosition = d3.event.pageX;
+										var yPosition = d3.event.pageY;
+				
+											d3.select("#tooltip")
+												.classed("hidden",false)
+												.style("left", xPosition + "px")
+												.style("top", yPosition + "px")
+												.html( + d.Valid );
+                                                     
+									}
+				
+									function mouseout() {
+										d3.select("#tooltip").classed("hidden", true);
+										d3.select(this).classed("highlight",false)
+									}*/
+
+						// Parse the Data
+						d3.csv("parties.csv", function(data) {
+
+						  // Add X axis
+						  var x = d3.scaleLinear()
+							.domain([0, 80])
+							.range([ 0, width]);
+						  svg.append("g")
+						  .style("font","16px times")
+							.attr("transform", "translate(0," + height + ")")
+							.call(d3.axisBottom(x))
+							.selectAll("text")
+							  .attr("transform", "translate(-12,0)rotate(-45)")
+							  .style("text-anchor", "end");
+
+						  // Y axis
+						  var y = d3.scaleBand()
+							.range([ 0, height ])
+							.domain(data.map(function(d) { return d.Party; }))
+							.padding(.2);
+						  svg.append("g")
+						  .style("font","16px times")
+							.call(d3.axisLeft(y))
+						 
+						  //Bars
+						  svg.selectAll(".bar")
+							.data(data) 
+							.enter()
+							.append("rect")
+							.attr("x", x(0.5))
+							.attr("y", function(d) { return y(d.Party); })
+							.attr("width", function(d) { return x(d.Valid); })
+							.attr("height", y.bandwidth() )
+							.attr("fill", "rgb(204,0,0)")
+							//.on('mouseover', function(d) {
+																						//d3.select(this).classed("highlight",true);
+																						//drawTooltip(d);})
+																					//.on('mouseout',mouseout);
+					
+						});
+					</script>
+				</div>
+				<div id ="result-Party" style="float:left;">
+				<h2><span style="color:black;font-size:28px"> 192 Candidates </span><br><span style="color:#0033CC;font-size:20px"> 40 Female  152 Male</span></br>
+				<br><span style="color:#0033CC;font-size:25px">Age</span> <br> 
+				<span style="color:black;font-size:20px">Youngest</span> </br> 
+				23 <br>Choo Shuan Ming-PSP <br> <br><span style="color:black;font-size:20px">Oldest</span> </br> 
+				80 <br>Tan Cheng Bok-PSP</br></br><span style="color:#0033CC;font-size:20px"> Median Age </span><br> 49 </br></h2>
+				
+				</div>
+				</div>
+				</div>
+				
+			  </div>
+		</div>
+		</div>
+		
+    </body>  
+</html>      
